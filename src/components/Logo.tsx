@@ -129,7 +129,7 @@ export function Logo({ className = "", showText = true, size = "md" }: {
             AI
           </motion.text>
           
-          {/* Sparkle effects */}
+          {/* Sparkle effects - Fixed positions */}
           <motion.circle
             cx="20"
             cy="30"
@@ -216,7 +216,17 @@ export function LogoMark({ className = "" }: { className?: string }) {
   );
 }
 
-// Animated hero logo with extra effects
+// Fixed particle positions to avoid hydration mismatch
+const PARTICLE_POSITIONS = [
+  { left: 25, top: 30 },
+  { left: 70, top: 25 },
+  { left: 75, top: 65 },
+  { left: 30, top: 70 },
+  { left: 50, top: 20 },
+  { left: 60, top: 75 },
+];
+
+// Animated hero logo with extra effects - No random values
 export function HeroLogo({ className = "" }: { className?: string }) {
   return (
     <motion.div 
@@ -236,14 +246,14 @@ export function HeroLogo({ className = "" }: { className?: string }) {
       
       <Logo size="xl" showText={false} />
       
-      {/* Floating particles */}
-      {[...Array(6)].map((_, i) => (
+      {/* Floating particles - Fixed positions */}
+      {PARTICLE_POSITIONS.map((pos, i) => (
         <motion.div
           key={i}
           className="absolute w-1 h-1 bg-primary rounded-full"
           style={{
-            left: `${20 + Math.random() * 60}%`,
-            top: `${20 + Math.random() * 60}%`,
+            left: `${pos.left}%`,
+            top: `${pos.top}%`,
           }}
           animate={{
             y: [0, -20, 0],
@@ -251,9 +261,9 @@ export function HeroLogo({ className = "" }: { className?: string }) {
             scale: [0.5, 1.5, 0.5],
           }}
           transition={{
-            duration: 2 + Math.random() * 2,
+            duration: 2 + (i * 0.3),
             repeat: Infinity,
-            delay: i * 0.3,
+            delay: i * 0.2,
           }}
         />
       ))}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Brain, Loader2, TrendingUp, TrendingDown, Target, AlertTriangle, Sparkles, RefreshCw, DollarSign, Zap, Activity } from "lucide-react";
+import { motion } from "framer-motion";
 
 interface AIResult {
   bias: string;
@@ -46,7 +47,15 @@ export function AIAnalysisSection() {
   const [livePrice, setLivePrice] = useState<number>(2485.50);
   const [priceData, setPriceData] = useState<MarketData | null>(null);
   const [priceLoading, setPriceLoading] = useState(false);
-  const [lastUpdate, setLastUpdate] = useState<string>(new Date().toLocaleTimeString());
+  const [lastUpdate, setLastUpdate] = useState<string>("--:--:--");
+  const [mounted, setMounted] = useState(false);
+
+  // Set mounted on client - standard pattern for SSR compatibility
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+    setLastUpdate(new Date().toLocaleTimeString());
+  }, []);
 
   // Fetch live price
   const fetchLivePrice = async () => {
@@ -58,7 +67,6 @@ export function AIAnalysisSection() {
       setLivePrice(data.price);
       setLastUpdate(new Date().toLocaleTimeString());
     } catch {
-      // Use mock price
       const mockPrices: Record<string, number> = {
         'XAUUSD': 2485.50,
         'BTCUSD': 67500,
@@ -77,7 +85,6 @@ export function AIAnalysisSection() {
     setIsLoading(true);
     
     try {
-      // Calculate fib levels if provided
       const fibLevels: Record<string, number> = {};
       const high = parseFloat(highLevel);
       const low = parseFloat(lowLevel);
@@ -105,7 +112,6 @@ export function AIAnalysisSection() {
       const data = await res.json();
       setResult(data);
     } catch {
-      // Error fallback
       setResult({
         bias: Math.random() > 0.5 ? 'bullish' : 'bearish',
         confidence: 70 + Math.floor(Math.random() * 20),
@@ -118,7 +124,7 @@ export function AIAnalysisSection() {
           `Break above ${livePrice + 20} → Target ${livePrice + 50}`,
           `Hold above ${livePrice - 20} → Buy opportunity`
         ],
-        summary: `${symbol} showing ${Math.random() > 0.5 ? 'bullish' : 'bearish'} momentum at ${livePrice}`,
+        summary: `${symbol} showing momentum at ${livePrice}`,
       });
     }
     
@@ -135,14 +141,24 @@ export function AIAnalysisSection() {
     return "text-yellow-500 bg-yellow-500/20 border-yellow-500/30";
   };
 
-  const getPriceChange = () => {
-    if (!priceData?.open) return null;
-    const change = livePrice - priceData.open;
-    const percent = (change / priceData.open) * 100;
-    return { change, percent };
-  };
+  const priceChange = priceData?.open ? {
+    change: livePrice - priceData.open,
+    percent: ((livePrice - priceData.open) / priceData.open) * 100
+  } : null;
 
-  const priceChange = getPriceChange();
+  if (!mounted) {
+    return (
+      <section id="ai" className="py-20 px-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-12">
+            <div className="animate-pulse bg-primary/20 h-8 w-48 mx-auto rounded-full mb-4" />
+            <div className="animate-pulse bg-muted h-12 w-96 mx-auto rounded-lg mb-4" />
+            <div className="animate-pulse bg-muted h-6 w-80 mx-auto rounded-lg" />
+          </div>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <section id="ai" className="py-20 px-4">
@@ -432,7 +448,7 @@ export function AIAnalysisSection() {
                       <AlertTriangle className="w-5 h-5 text-yellow-500 shrink-0 mt-0.5" />
                       <p className="text-xs text-muted-foreground">
                         <strong>Disclaimer:</strong> This AI analysis is for educational purposes only. 
-                        Always do your own research and manage risk properly. Past performance does not guarantee future results.
+                        Always do your own research and manage risk properly.
                       </p>
                     </div>
                   </div>
@@ -445,6 +461,3 @@ export function AIAnalysisSection() {
     </section>
   );
 }
-
-// Import motion
-import { motion } from "framer-motion";
